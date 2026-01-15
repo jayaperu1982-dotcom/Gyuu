@@ -50,4 +50,4 @@ jobs:
           Write-Host "Downloaded file contents:"
           Get-Content Downloads.bat
 
-      -
+      
