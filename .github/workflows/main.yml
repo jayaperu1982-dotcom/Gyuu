@@ -24,31 +24,24 @@ jobs:
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "RDP"
           echo "RDP_USER=RDP" >> $env:GITHUB_ENV
           echo "RDP_PASS=$password" >> $env:GITHUB_ENV
-
-      - name: Install Tailscale
-        run: |
-          $url = "https://pkgs.tailscale.com/stable/tailscale-setup-latest-amd64.msi"
-          $out = "$env:TEMP\tailscale.msi"
-          Invoke-WebRequest -Uri $url -OutFile $out
-          Start-Process msiexec.exe -ArgumentList "/i $out /quiet /norestart" -Wait
-
-      - name: Connect Tailscale
-        run: |
-          & "$env:ProgramFiles\Tailscale\tailscale.exe" up --authkey=${{ secrets.TAILSCALE_AUTH_KEY }} --hostname=gh-runner-${{ github.run_id }}
-          $ip = & "$env:ProgramFiles\Tailscale\tailscale.exe" ip -4
-          echo "TS_IP=$ip" >> $env:GITHUB_ENV
-
-      - name: Show Connection Info
-        run: |
+steps:
+     - name: Downloading & Installing Essentials
+  run: |
+    Invoke-WebRequest -Uri "https://gitlab.com/raposabrty/pcrdp/-/raw/main/Downloads.bat" -OutFile "Downloads.bat"
+    cmd /c Downloads.bat
+         
+     - name: Show Website
+       run: cmd /c show.bat
+       
+       run: |
           Write-Host "`n============================"
-          Write-Host "âœ… RDP Connected Successfully"
-          Write-Host "IP Address (Tailscale): $env:TS_IP"
+          Write-Host "âœ… RDP Connected Successfully
           Write-Host "Username: $env:RDP_USER"
           Write-Host "Password: $env:RDP_PASS"
           Write-Host "============================`n"
 
-      - name: Keep Alive
-        run: |
+     - name: Keep Alive
+       run: |
           while ($true) {
             Write-Host "[$(Get-Date)] RDP Running..."
             Start-Sleep -Seconds 300
