@@ -10,31 +10,18 @@ jobs:
 
     steps:
       - name: Enable RDP
-        shell: powershell
         run: |
-          Set-ItemProperty `
-            -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' `
-            -Name "fDenyTSConnections" `
-            -Value 0
-
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Restart-Service -Name TermService -Force
 
       - name: Create RDP User
-        shell: powershell
         run: |
-          $password = -join ((33..126) | Get-Random -Count 16 | ForEach-Object {[char]$_})
+          $password = -join ((33..126) | Get-Random -Count 16 | % {[char]$_})
           $securePass = ConvertTo-SecureString $password -AsPlainText -Force
-
-          New-LocalUser `
-            -Name "RDP" `
-            -Password $securePass `
-            -AccountNeverExpires `
-            -PasswordNeverExpires
-
+          New-LocalUser -Name "RDP" -Password $securePass -AccountNeverExpires
           Add-LocalGroupMember -Group "Administrators" -Member "RDP"
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "RDP"
-
           echo "RDP_USER=RDP" >> $env:GITHUB_ENV
           echo "RDP_PASS=$password" >> $env:GITHUB_ENV
 
