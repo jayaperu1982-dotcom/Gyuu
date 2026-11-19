@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS//TUNNEL — Next-Gen SSH & Multi-Protocol Proxy Infrastructure</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            bg: '#06080d',
+                            card: '#0d111a',
+                            border: '#1e293b',
+                            emerald: '#10b981',
+                            cyan: '#06b6d4',
+                            purple: '#8b5cf6',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #06080d;
+            color: #e2e8f0;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.06) 0%, transparent 40%),
+                linear-gradient(to right, rgba(30, 41, 59, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(30, 41, 59, 0.2) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+        }
+        /* Custom subtle scrollbar for code blocks */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d111a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-40 border-b border-slate-800/80 bg-[#06080d]/85 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    <i data-lucide="terminal" class="w-5 h-5"></i>
+                </div>
+                <span class="font-mono font-bold text-lg tracking-wider text-white">
+                    NEXUS<span class="text-emerald-400">//</span>TUNNEL
+                </span>
+                <span class="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest rounded bg-slate-800 text-slate-400 border border-slate-700">
+                    v2.4.0-LTS
+                </span>
+            </div>
+
+            <!-- Nav Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+                <a href="#generator" class="hover:text-emerald-400 transition-colors">Config Generator</a>
+                <a href="#features" class="hover:text-emerald-400 transition-colors">Architecture</a>
+                <a href="#docs" class="hover:text-emerald-400 transition-colors">Setup & Guides</a>
+            </nav>
+
+            <!-- Live Status Indicator -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-xs font-mono text-emerald-300">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span>EDGE RELAYS: ONLINE</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <!-- 1. HERO SECTION -->
+        <section class="relative pt-4 pb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                <!-- Left Column: Copy & Quick Actions -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-xs">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                        <span>ZERO-TRUST ENCRYPTED TUNNELING SUITE</span>
+                    </div>
+
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
+                        Bypass Firewalls. <br/>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400">
+                            Tunnel Everything.
+                        </span>
+                    </h1>
+
+                    <p class="text-base sm:text-lg text-slate-400 max-w-2xl leading-relaxed">
+                        Deploy high-speed, zero-cost encrypted proxies directly from Android Termux or Linux nodes. Seamlessly bridge <span class="text-slate-200 font-medium">SSH over WebSocket/TLS</span>, <span class="text-slate-200 font-medium">Cloudflare Quick Tunnels</span>, <span class="text-slate-200 font-medium">Pinggy</span>, <span class="text-slate-200 font-medium">DarkTunnel</span>, and <span class="text-slate-200 font-medium">Xray-core</span>.
+                    </p>
+
+                    <!-- Protocol Badges -->
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <span class="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300">OpenSSH 9.x</span>
+                        <span class="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono text-cyan-300">Cloudflare Argo</span>
+                        <span class="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono text-emerald-300">V2Ray / Xray</span>
+                        <span class="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono text-purple-300">DarkTunnel WS</span>
+                        <span class="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono text-amber-300">Pinggy TCP/TLS</span>
+                    </div>
+
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-wrap items-center gap-4 pt-2">
+                        <a href="#generator" class="px-6 py-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-sm transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center gap-2">
+                            <i data-lucide="sliders" class="w-4 h-4"></i>
+                            Launch Config Generator
+                        </a>
+                        <a href="#docs" class="px-6 py-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-medium text-sm transition-all flex items-center gap-2">
+                            <i data-lucide="book-open" class="w-4 h-4"></i>
+                            Read Deployment Docs
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Column: Interactive Quick-Copy Terminal Window -->
+                <div class="lg:col-span-5">
+                    <div class="rounded-xl bg-[#0a0e17] border border-slate-800 shadow-2xl overflow-hidden">
+                        <!-- Terminal Header -->
+                        <div class="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+                                <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+                                <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                                <span class="ml-2 text-xs font-mono text-slate-400">termux@android:~</span>
+                            </div>
+                            <span class="text-[11px] font-mono text-emerald-400">QUICK-BOOT</span>
+                        </div>
+
+                        <!-- Quick Copy Commands Body -->
+                        <div class="p-4 space-y-4 font-mono text-xs">
+                            <!-- Snippet 1 -->
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between text-slate-400">
+                                    <span># 1. Termux SSH + Cloudflared Bootstrap</span>
+                                    <button onclick="copyText('pkg update -y && pkg install openssh cloudflared -y && sshd', 'Termux bootstrap command copied!')" class="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+                                    </button>
+                                </div>
+                                <div class="p-3 rounded-lg bg-[#05070b] border border-slate-800/90 text-emerald-300 overflow-x-auto whitespace-nowrap">
+                                    $ pkg update -y && pkg install openssh cloudflared -y && sshd
+                                </div>
+                            </div>
+
+                            <!-- Snippet 2 -->
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between text-slate-400">
+                                    <span># 2. Instant Cloudflare Quick Tunnel (Port 8022)</span>
+                                    <button onclick="copyText('cloudflared tunnel --url tcp://localhost:8022', 'Cloudflared tunnel command copied!')" class="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+                                    </button>
+                                </div>
+                                <div class="p-3 rounded-lg bg-[#05070b] border border-slate-800/90 text-cyan-300 overflow-x-auto whitespace-nowrap">
+                                    $ cloudflared tunnel --url tcp://localhost:8022
+                                </div>
+                            </div>
+
+                            <!-- Snippet 3 -->
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between text-slate-400">
+                                    <span># 3. Zero-Install Pinggy TCP Tunnel</span>
+                                    <button onclick="copyText('ssh -p 443 -R0:localhost:8022 tcp@a.pinggy.io', 'Pinggy command copied!')" class="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+                                    </button>
+                                </div>
+                                <div class="p-3 rounded-lg bg-[#05070b] border border-slate-800/90 text-purple-300 overflow-x-auto whitespace-nowrap">
+                                    $ ssh -p 443 -R0:localhost:8022 tcp@a.pinggy.io
+                                </div>
+                            </div>
+
+                            <!-- Simulated Live Output -->
+                            <div class="pt-2 border-t border-slate-800/80 text-[11px] text-slate-500 space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-emerald-500">INF</span>
+                                    <span>Registered tunnel connection connIndex=0</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-cyan-500">URL</span>
+                                    <span class="text-slate-300 underline decoration-slate-700">https://cyber-relay-node.trycloudflare.com</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. INTERACTIVE CONFIG / COMMAND GENERATOR -->
+        <section id="generator" class="scroll-mt-24 space-y-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-widest text-emerald-400">// DYNAMIC PAYLOAD & SCRIPT ENGINE</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">Interactive Tunnel Config Generator</h2>
+                </div>
+                <p class="text-sm text-slate-400 max-w-md">
+                    Enter your dynamic tunnel endpoint and credentials to compile ready-to-use CLI commands, DarkTunnel payloads, Xray JSONs, and Termux scripts.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-[#0d111a] border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-xl">
+                <!-- Input Controls Panel (Left 5 cols) -->
+                <div class="lg:col-span-5 space-y-5 border-b lg:border-b-0 lg:border-r border-slate-800 pb-6 lg:pb-0 lg:pr-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-mono font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
+                            Endpoint Parameters
+                        </h3>
+                        <!-- Preset Quick Fill Buttons -->
+                        <div class="flex gap-1.5">
+                            <button onclick="applyPreset('cf')" class="px-2 py-1 text-[11px] font-mono rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors cursor-pointer">
+                                Cloudflare
+                            </button>
+                            <button onclick="applyPreset('pinggy')" class="px-2 py-1 text-[11px] font-mono rounded bg-slate-800 hover:bg-slate-700 text-purple-300 border border-slate-700 transition-colors cursor-pointer">
+                                Pinggy
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tunnel Host / Domain -->
+                    <div>
+                        <label class="block text-xs font-mono text-slate-400 mb-1.5">TUNNEL DOMAIN / HOST</label>
+                        <div class="relative">
+                            <input type="text" id="cfg-domain" value="quantum-node-88.trycloudflare.com" oninput="updateGeneratedConfigs()"
+                                class="w-full bg-[#06080d] border border-slate-700 focus:border-emerald-500 rounded-lg px-3.5 py-2.5 text-sm font-mono text-white outline-none transition-colors"
+                                placeholder="e.g., xyz.trycloudflare.com or r.pinggy.io">
+                        </div>
+                    </div>
+
+                    <!-- Remote Port & Local Port Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1.5">REMOTE / TLS PORT</label>
+                            <input type="number" id="cfg-port" value="443" oninput="updateGeneratedConfigs()"
+                                class="w-full bg-[#06080d] border border-slate-700 focus:border-emerald-500 rounded-lg px-3.5 py-2.5 text-sm font-mono text-white outline-none transition-colors"
+                                placeholder="443">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1.5">LOCAL SSH/WS PORT</label>
+                            <input type="number" id="cfg-local-port" value="8022" oninput="updateGeneratedConfigs()"
+                                class="w-full bg-[#06080d] border border-slate-700 focus:border-emerald-500 rounded-lg px-3.5 py-2.5 text-sm font-mono text-white outline-none transition-colors"
+                                placeholder="8022">
+                        </div>
+                    </div>
+
+                    <!-- SSH Username & SNI/Bug Host -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1.5">SSH USERNAME</label>
+                            <input type="text" id="cfg-user" value="u0_a314" oninput="updateGeneratedConfigs()"
+                                class="w-full bg-[#06080d] border border-slate-700 focus:border-emerald-500 rounded-lg px-3.5 py-2.5 text-sm font-mono text-white outline-none transition-colors"
+                                placeholder="u0_a314 or root">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1.5">SNI / BUG HOST (OPTIONAL)</label>
+                            <input type="text" id="cfg-sni" value="m.cloudflare.com" oninput="updateGeneratedConfigs()"
+                                class="w-full bg-[#06080d] border border-slate-700 focus:border-emerald-500 rounded-lg px-3.5 py-2.5 text-sm font-mono text-white outline-none transition-colors"
+                                placeholder="sni.domain.com">
+                        </div>
+                    </div>
+
+                    <!-- WebSocket Path & UUID -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1.5">WS PATH</label>
+                            <input type="text" id="cfg-path" value="/nexus-ws" oninput="updateGeneratedConfigs()"
+                                class="w-full bg-[#06080d] border border-slate-700 focus:border-emerald-500 rounded-lg px-3.5 py-2.5 text-sm font-mono text-white outline-none transition-colors"
+                                placeholder="/ws">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1.5 flex justify-between">
+                                <span>XRAY UUID</span>
+                                <button onclick="regenerateUUID()" class="text-emerald-400 hover:underline cursor-pointer">Regen</button>
+                            </label>
+                            <input type="text" id="cfg-uuid" value="b831381d-6324-4d53-ad4f-8cda48b30811" oninput="updateGeneratedConfigs()"
+                                class="w-full bg-[#06080d] border border-slate-700 focus:border-emerald-500 rounded-lg px-3.5 py-2.5 text-xs font-mono text-slate-300 outline-none transition-colors">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output Code Display Panel (Right 7 cols) -->
+                <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
+                    <!-- Output Format Tabs -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                        <div class="flex flex-wrap gap-1.5" id="gen-tabs">
+                            <button onclick="switchGenTab('ssh')" data-gentab="ssh" class="gen-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 cursor-pointer">
+                                SSH Client / ProxyCommand
+                            </button>
+                            <button onclick="switchGenTab('darktunnel')" data-gentab="darktunnel" class="gen-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer">
+                                DarkTunnel WS/TLS
+                            </button>
+                            <button onclick="switchGenTab('xray')" data-gentab="xray" class="gen-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer">
+                                V2Ray / Xray JSON
+                            </button>
+                            <button onclick="switchGenTab('termux')" data-gentab="termux" class="gen-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer">
+                                Termux Auto-Start (.sh)
+                            </button>
+                        </div>
+
+                        <button onclick="copyGeneratedOutput()" class="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer">
+                            <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i>
+                            Copy Output
+                        </button>
+                    </div>
+
+                    <!-- Generated Code Box -->
+                    <div class="relative flex-1">
+                        <pre id="generated-output" class="w-full h-72 sm:h-80 p-4 rounded-xl bg-[#05070b] border border-slate-800/90 font-mono text-xs text-slate-200 overflow-auto leading-relaxed"></pre>
+                    </div>
+
+                    <!-- Helper Footnote -->
+                    <div class="flex items-center justify-between text-xs text-slate-500 font-mono">
+                        <span id="gen-hint">Tip: Uses cloudflared access tcp to wrap raw SSH over HTTPS/443.</span>
+                        <span class="text-emerald-500/80">READY TO DEPLOY</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. ARCHITECTURE & FEATURE GRID -->
+        <section id="features" class="scroll-mt-24 space-y-8">
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <span class="text-xs font-mono uppercase tracking-widest text-cyan-400">// CORE CAPABILITIES</span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-white">Engineered for Stealth & Resilience</h2>
+                <p class="text-sm text-slate-400">
+                    Designed to operate reliably across restrictive CGNAT mobile networks, deep packet inspection (DPI) firewalls, and headless Android nodes.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Feature 1 -->
+                <div class="p-6 rounded-2xl bg-[#0d111a] border border-slate-800 hover:border-emerald-500/40 transition-all group">
+                    <div class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-105 transition-transform">
+                        <i data-lucide="lock" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-2">Encrypted Multi-Hop Tunneling</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Encapsulates raw TCP and SOCKS5 traffic inside TLS 1.3 WebSocket streams, neutralizing DPI throttling and packet sniffing on public or carrier networks.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="p-6 rounded-2xl bg-[#0d111a] border border-slate-800 hover:border-cyan-500/40 transition-all group">
+                    <div class="w-11 h-11 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-4 group-hover:scale-105 transition-transform">
+                        <i data-lucide="cloud-lightning" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-2">Zero-Cost Cloudflare Quick Tunnels</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Expose local SSH, Xray, or HTTP reverse proxies to the public internet without opening router ports, owning a domain, or configuring static IPs.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="p-6 rounded-2xl bg-[#0d111a] border border-slate-800 hover:border-purple-500/40 transition-all group">
+                    <div class="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-105 transition-transform">
+                        <i data-lucide="smartphone" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-2">Low-Latency Mobile Sharing</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Turn any Android device running Termux into a portable edge gateway. Share unmetered 5G data via SOCKS5/HTTP proxy or DarkTunnel with minimal battery overhead.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="p-6 rounded-2xl bg-[#0d111a] border border-slate-800 hover:border-amber-500/40 transition-all group">
+                    <div class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-4 group-hover:scale-105 transition-transform">
+                        <i data-lucide="git-branch" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-2">Custom Payload & SNI Routing</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Inject custom HTTP Upgrade headers, spoof Server Name Indication (SNI) hostnames, and multiplex VLESS/VMess streams over Cloudflare CDN edge nodes.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. TROUBLESHOOTING & SETUP GUIDE TABS -->
+        <section id="docs" class="scroll-mt-24 space-y-6">
+            <div>
+                <span class="text-xs font-mono uppercase tracking-widest text-purple-400">// FIELD MANUAL & DIAGNOSTICS</span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">Setup & Troubleshooting Guides</h2>
+            </div>
+
+            <div class="bg-[#0d111a] border border-slate-800 rounded-2xl overflow-hidden">
+                <!-- Guide Tabs Header -->
+                <div class="flex flex-wrap border-b border-slate-800 bg-slate-900/50">
+                    <button onclick="switchDocTab('termux')" data-doctab="termux" class="doc-tab-btn px-5 py-4 text-xs sm:text-sm font-mono font-semibold text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5 flex items-center gap-2 cursor-pointer">
+                        <i data-lucide="terminal-square" class="w-4 h-4"></i>
+                        1. Termux Host Setup
+                    </button>
+                    <button onclick="switchDocTab('darktunnel')" data-doctab="darktunnel" class="doc-tab-btn px-5 py-4 text-xs sm:text-sm font-mono font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center gap-2 cursor-pointer">
+                        <i data-lucide="shield" class="w-4 h-4"></i>
+                        2. DarkTunnel Client Config
+                    </button>
+                    <button onclick="switchDocTab('xray')" data-doctab="xray" class="doc-tab-btn px-5 py-4 text-xs sm:text-sm font-mono font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center gap-2 cursor-pointer">
+                        <i data-lucide="network" class="w-4 h-4"></i>
+                        3. Cloudflare / Xray Setup
+                    </button>
+                </div>
+
+                <!-- Tab Content 1: Termux Host Setup -->
+                <div id="doc-content-termux" class="doc-panel p-6 sm:p-8 space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-bold text-white">Initializing SSH & Wake-Lock on Android</h3>
+                            <p class="text-sm text-slate-400 leading-relaxed">
+                                Android aggressively kills background processes when the screen turns off. Always acquire a Termux wake-lock and configure <code class="text-emerald-300 bg-slate-900 px-1.5 py-0.5 rounded">sshd</code> to listen on port <code class="text-emerald-300 bg-slate-900 px-1.5 py-0.5 rounded">8022</code> with password or public-key authentication.
+                            </p>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+                                    <span>STEP-BY-STEP SHELL SETUP</span>
+                                    <button onclick="copyElementText('termux-setup-code', 'Termux setup script copied!')" class="text-emerald-400 hover:underline cursor-pointer">Copy Script</button>
+                                </div>
+                                <pre id="termux-setup-code" class="p-4 rounded-xl bg-[#05070b] border border-slate-800 font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed"># 1. Prevent Android Doze from killing tunnels
+termux-wake-lock
+
+# 2. Check your current Termux username
+whoami
+
+# 3. Set a strong SSH password
+passwd
+
+# 4. Start OpenSSH daemon (default port 8022)
+sshd
+
+# 5. Verify daemon is listening
+ss -tulpn | grep 8022</pre>
+                            </div>
+                        </div>
+
+                        <!-- Troubleshooting Box -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i data-lucide="wrench" class="w-5 h-5 text-amber-400"></i>
+                                Common Termux Issues & Fixes
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="p-4 rounded-xl bg-[#06080d] border border-slate-800/90 space-y-1">
+                                    <div class="text-xs font-mono font-bold text-rose-400">ERROR: Permission denied (publickey,password)</div>
+                                    <p class="text-xs text-slate-400">
+                                        Ensure you ran <code class="text-slate-200">passwd</code> in Termux and are connecting with the exact output of <code class="text-slate-200">whoami</code> (e.g., <code class="text-slate-200">u0_a245</code>), NOT <code class="text-slate-200">root</code>.
+                                    </p>
+                                </div>
+                                <div class="p-4 rounded-xl bg-[#06080d] border border-slate-800/90 space-y-1">
+                                    <div class="text-xs font-mono font-bold text-amber-400">ISSUE: Tunnel drops after 5 minutes of screen off</div>
+                                    <p class="text-xs text-slate-400">
+                                        Go to Android Settings → Apps → Termux → Battery → Set to <strong class="text-slate-200">Unrestricted</strong>. Also add <code class="text-slate-200">ServerAliveInterval 30</code> to your SSH client config.
+                                    </p>
+                                </div>
+                                <div class="p-4 rounded-xl bg-[#06080d] border border-slate-800/90 space-y-1">
+                                    <div class="text-xs font-mono font-bold text-cyan-400">ISSUE: cloudflared fails to resolve DNS in Termux</div>
+                                    <p class="text-xs text-slate-400">
+                                        Run cloudflared with explicit edge IPv4 protocol: <code class="text-slate-200">cloudflared tunnel --edge-ip-version 4 --protocol http2 --url tcp://localhost:8022</code>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content 2: DarkTunnel Client Config -->
+                <div id="doc-content-darktunnel" class="doc-panel hidden p-6 sm:p-8 space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-bold text-white">Configuring DarkTunnel (SSH over WS + TLS)</h3>
+                            <p class="text-sm text-slate-400 leading-relaxed">
+                                DarkTunnel wraps standard SSH connections inside an HTTP WebSocket handshake over TLS port 443. This makes your SSH session indistinguishable from normal HTTPS web browsing.
+                            </p>
+                            <ul class="space-y-2.5 text-xs font-mono text-slate-300 bg-[#06080d] p-4 rounded-xl border border-slate-800">
+                                <li class="flex justify-between border-b border-slate-800/80 pb-2">
+                                    <span class="text-slate-500">Tunnel Type:</span>
+                                    <span class="text-emerald-400">SSH + WebSocket + TLS (SSL)</span>
+                                </li>
+                                <li class="flex justify-between border-b border-slate-800/80 pb-2">
+                                    <span class="text-slate-500">Server Host:</span>
+                                    <span class="text-cyan-300">your-subdomain.trycloudflare.com</span>
+                                </li>
+                                <li class="flex justify-between border-b border-slate-800/80 pb-2">
+                                    <span class="text-slate-500">Server Port:</span>
+                                    <span>443</span>
+                                </li>
+                                <li class="flex justify-between border-b border-slate-800/80 pb-2">
+                                    <span class="text-slate-500">SNI (Server Name):</span>
+                                    <span class="text-purple-300">your-subdomain.trycloudflare.com</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span class="text-slate-500">Local SOCKS5 Port:</span>
+                                    <span>10808 (Enable Forward UDP)</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold text-white">Custom HTTP Upgrade Payload</h3>
+                                <button onclick="copyElementText('dt-payload-code', 'DarkTunnel payload copied!')" class="text-xs font-mono text-cyan-400 hover:underline cursor-pointer">Copy Payload</button>
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                Paste this into DarkTunnel's <strong class="text-slate-200">Custom Payload</strong> field if your backend uses a WebSocket-to-SSH bridge (like `wstunnel` or `node-ws-ssh`):
+                            </p>
+                            <pre id="dt-payload-code" class="p-4 rounded-xl bg-[#05070b] border border-slate-800 font-mono text-xs text-cyan-300 overflow-x-auto leading-relaxed">GET /nexus-ws HTTP/1.1[crlf]
+Host: [host][crlf]
+Upgrade: websocket[crlf]
+Connection: Upgrade[crlf]
+User-Agent: Mozilla/5.0 (Linux; Android 14) Chrome/126.0[crlf]
+[crlf]</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content 3: Cloudflare / Xray Setup -->
+                <div id="doc-content-xray" class="doc-panel hidden p-6 sm:p-8 space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-bold text-white">Xray-Core VLESS + WS Behind Cloudflared</h3>
+                            <p class="text-sm text-slate-400 leading-relaxed">
+                                For maximum throughput and native multiplexing, run <code class="text-purple-300 bg-slate-900 px-1.5 py-0.5 rounded">xray</code> locally on port <code class="text-purple-300 bg-slate-900 px-1.5 py-0.5 rounded">10000</code> (non-TLS WebSocket) and let Cloudflare Quick Tunnel handle the outer TLS 1.3 encryption automatically.
+                            </p>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+                                    <span>RUN XRAY + CLOUDFLARED PIPELINE</span>
+                                    <button onclick="copyElementText('xray-cmd-code', 'Xray pipeline command copied!')" class="text-purple-400 hover:underline cursor-pointer">Copy Command</button>
+                                </div>
+                                <pre id="xray-cmd-code" class="p-4 rounded-xl bg-[#05070b] border border-slate-800 font-mono text-xs text-purple-300 overflow-x-auto leading-relaxed"># Install Xray-core in Termux
+pkg install xray -y
+
+# Launch Xray inbound server in background
+xray run -c server_vless_ws.json &
+
+# Expose local WS port 10000 via Cloudflare HTTPS
+cloudflared tunnel --url http://localhost:10000</pre>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-bold text-white">Client Connection Parameters (v2rayNG / Nekobox)</h3>
+                            <div class="p-4 rounded-xl bg-[#06080d] border border-slate-800 space-y-3 text-xs font-mono">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Protocol:</span>
+                                    <span class="text-white">VLESS</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Address (CDN IP or Domain):</span>
+                                    <span class="text-emerald-400">*.trycloudflare.com</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Port:</span>
+                                    <span class="text-white">443</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Network / Transport:</span>
+                                    <span class="text-cyan-400">ws (WebSocket)</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Path:</span>
+                                    <span class="text-white">/nexus-ws</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">TLS / Security:</span>
+                                    <span class="text-amber-400">tls (AllowInsecure: false)</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                <strong class="text-emerald-400">Pro Tip:</strong> Because Cloudflare Quick Tunnels terminate TLS at Cloudflare's edge, set your Xray server inbound security to <code class="text-slate-200">none</code> while setting the client outbound security to <code class="text-slate-200">tls</code>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-[#05070b] mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-500">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>NEXUS//TUNNEL — Open-Source Proxy & Tunneling Documentation Portal</span>
+            </div>
+            <div>
+                Built for Termux • OpenSSH • Cloudflared • Pinggy • Xray-Core
+            </div>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // State for Config Generator
+        let currentGenTab = 'ssh';
+
+        // Toast Notification System (No alert() used)
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900/95 border border-emerald-500/40 text-emerald-300 font-mono text-xs shadow-[0_0_25px_rgba(16,185,129,0.2)] transform transition-all duration-300 translate-y-2 opacity-0';
+            toast.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            // Remove after 2.8 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 2800);
+        }
+
+        // Reliable Clipboard Copy using execCommand fallback for iframe safety
+        function copyText(text, toastMsg = 'Copied to clipboard!') {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast(toastMsg);
+            } catch (err) {
+                showToast('Failed to copy text.');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function copyElementText(elementId, toastMsg) {
+            const el = document.getElementById(elementId);
+            if (el) copyText(el.innerText, toastMsg);
+        }
+
+        function copyGeneratedOutput() {
+            const output = document.getElementById('generated-output').innerText;
+            copyText(output, `Copied ${currentGenTab.toUpperCase()} configuration!`);
+        }
+
+        // Preset Quick-Fill
+        function applyPreset(type) {
+            if (type === 'cf') {
+                document.getElementById('cfg-domain').value = 'quantum-node-88.trycloudflare.com';
+                document.getElementById('cfg-port').value = '443';
+                document.getElementById('cfg-local-port').value = '8022';
+                document.getElementById('cfg-user').value = 'u0_a314';
+                document.getElementById('cfg-sni').value = 'quantum-node-88.trycloudflare.com';
+                showToast('Loaded Cloudflare Quick Tunnel preset');
+            } else if (type === 'pinggy') {
+                document.getElementById('cfg-domain').value = 'rn-104-28-14-92.a.free.pinggy.link';
+                document.getElementById('cfg-port').value = '443';
+                document.getElementById('cfg-local-port').value = '8022';
+                document.getElementById('cfg-user').value = 'u0_a314';
+                document.getElementById('cfg-sni').value = 'a.pinggy.io';
+                showToast('Loaded Pinggy TCP/TLS preset');
+            }
+            updateGeneratedConfigs();
+        }
+
+        // Generate Random UUID v4
+        function regenerateUUID() {
+            const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+            document.getElementById('cfg-uuid').value = uuid;
+            updateGeneratedConfigs();
+            showToast('Generated new Xray UUID');
+        }
+
+        // Switch Config Generator Tab
+        function switchGenTab(tab) {
+            currentGenTab = tab;
+            document.querySelectorAll('.gen-tab-btn').forEach(btn => {
+                if (btn.dataset.gentab === tab) {
+                    btn.className = 'gen-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 cursor-pointer';
+                } else {
+                    btn.className = 'gen-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer';
+                }
+            });
+            updateGeneratedConfigs();
+        }
+
+        // Dynamic Config Compilation
+        function updateGeneratedConfigs() {
+            const domain = document.getElementById('cfg-domain').value.trim() || 'example.trycloudflare.com';
+            const port = document.getElementById('cfg-port').value.trim() || '443';
+            const localPort = document.getElementById('cfg-local-port').value.trim() || '8022';
+            const user = document.getElementById('cfg-user').value.trim() || 'u0_a314';
+            const sni = document.getElementById('cfg-sni').value.trim() || domain;
+            const path = document.getElementById('cfg-path').value.trim() || '/nexus-ws';
+            const uuid = document.getElementById('cfg-uuid').value.trim() || 'b831381d-6324-4d53-ad4f-8cda48b30811';
+
+            const outputEl = document.getElementById('generated-output');
+            const hintEl = document.getElementById('gen-hint');
+
+            if (currentGenTab === 'ssh') {
+                hintEl.innerText = 'Tip: Requires cloudflared installed on client to proxy raw TCP over HTTPS.';
+                outputEl.textContent = `# 1. Direct SSH via Cloudflare Access ProxyCommand (SOCKS5 on :1080)
+ssh -D 1080 -C -N -o "ProxyCommand=cloudflared access tcp --hostname ${domain}" ${user}@${domain}
+
+# 2. Or add this permanent block to your ~/.ssh/config
+Host nexus-tunnel
+    HostName ${domain}
+    User ${user}
+    Port ${port}
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+    DynamicForward 127.0.0.1:1080
+    ProxyCommand cloudflared access tcp --hostname %h
+
+# Connect anytime with:
+ssh nexus-tunnel`;
+            } 
+            else if (currentGenTab === 'darktunnel') {
+                hintEl.innerText = 'Tip: Import these values into DarkTunnel -> Settings -> SSH & Payload.';
+                outputEl.textContent = `=== DARKTUNNEL CLIENT PROFILE ===
+[Connection Mode]
+Protocol       : SSH + WebSocket + TLS (SSL)
+Server Host    : ${domain}
+Server Port    : ${port}
+Username       : ${user}
+Password       : <YOUR_TERMUX_SSH_PASSWORD>
+
+[TLS / SNI Settings]
+SNI Hostname   : ${sni}
+TLS Version    : TLSv1.3 / TLSv1.2
+Allow Insecure : False
+
+[Custom HTTP Payload]
+GET ${path} HTTP/1.1[crlf]Host: ${domain}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]
+
+[Local Forwarding]
+SOCKS5 Proxy   : 127.0.0.1:10808
+DNS Forwarding : Enabled (1.1.1.1)`;
+            } 
+            else if (currentGenTab === 'xray') {
+                hintEl.innerText = 'Tip: Standard VLESS+WS+TLS outbound config compatible with Xray-core & v2rayNG.';
+                const xrayConfig = {
+                    log: { loglevel: "warning" },
+                    inbounds: [
+                        {
+                            port: 10808,
+                            listen: "127.0.0.1",
+                            protocol: "socks",
+                            settings: { auth: "noauth", udp: true }
+                        }
+                    ],
+                    outbounds: [
+                        {
+                            protocol: "vless",
+                            settings: {
+                                vnext: [
+                                    {
+                                        address: domain,
+                                        port: parseInt(port, 10) || 443,
+                                        users: [
+                                            {
+                                                id: uuid,
+                                                encryption: "none"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            streamSettings: {
+                                network: "ws",
+                                security: "tls",
+                                tlsSettings: {
+                                    serverName: sni,
+                                    allowInsecure: false
+                                },
+                                wsSettings: {
+                                    path: path,
+                                    headers: {
+                                        Host: domain
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                };
+                outputEl.textContent = JSON.stringify(xrayConfig, null, 2);
+            } 
+            else if (currentGenTab === 'termux') {
+                hintEl.innerText = 'Tip: Save as ~/start-nexus.sh and run chmod +x ~/start-nexus.sh';
+                outputEl.textContent = `#!/data/data/com.termux/files/usr/bin/bash
+# NEXUS//TUNNEL Auto-Boot & Watchdog Script for Termux
+
+echo "[*] Acquiring Android Wake-Lock..."
+termux-wake-lock
+
+echo "[*] Starting OpenSSH Daemon on port ${localPort}..."
+pkill sshd 2>/dev/null
+sshd -p ${localPort}
+
+echo "[*] Launching Cloudflare Quick Tunnel -> tcp://localhost:${localPort}"
+while true; do
+    cloudflared tunnel --edge-ip-version 4 --protocol http2 --url tcp://localhost:${localPort}
+    echo "[!] Tunnel disconnected. Restarting in 3 seconds..."
+    sleep 3
+done`;
+            }
+        }
+
+        // Switch Documentation / Troubleshooting Tabs
+        function switchDocTab(tab) {
+            document.querySelectorAll('.doc-tab-btn').forEach(btn => {
+                if (btn.dataset.doctab === tab) {
+                    btn.className = 'doc-tab-btn px-5 py-4 text-xs sm:text-sm font-mono font-semibold text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5 flex items-center gap-2 cursor-pointer';
+                } else {
+                    btn.className = 'doc-tab-btn px-5 py-4 text-xs sm:text-sm font-mono font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center gap-2 cursor-pointer';
+                }
+            });
+
+            document.querySelectorAll('.doc-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            document.getElementById(`doc-content-${tab}`).classList.remove('hidden');
+        }
+
+        // Initial render of generated config
+        updateGeneratedConfigs();
+    </script>
+</body>
+</html>
